@@ -1,0 +1,317 @@
+{
+  "name": "promptpack",
+  "displayName": "PromptPack - Copy Project Code for AI",
+  "description": "Right-click files or folders and copy their contents, with a project tree, as one block ready to paste into ChatGPT, Claude, Gemini, or any other LLM.",
+  "version": "1.0.0",
+  "publisher": "FeniksZharovik",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FeniksZharovik/promptpack.git"
+  },
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "llm",
+    "prompt",
+    "context",
+    "clipboard",
+    "chatgpt",
+    "claude",
+    "copy"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "capabilities": {
+    "virtualWorkspaces": true,
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In an untrusted workspace PromptPack ignores workspace-level PromptPack settings and uses only your user settings.",
+      "restrictedConfigurations": [
+        "promptpack.outputFormat",
+        "promptpack.includeProjectTree",
+        "promptpack.maxDepth",
+        "promptpack.ignoreDotFiles",
+        "promptpack.ignoreGitIgnore",
+        "promptpack.exclude",
+        "promptpack.excludeContentPatterns",
+        "promptpack.maxFileSize",
+        "promptpack.enableTokenCounting",
+        "promptpack.llmModel",
+        "promptpack.maxTokens",
+        "promptpack.enableTokenWarning",
+        "promptpack.excludePaths",
+        "promptpack.excludePatterns"
+      ]
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "promptpack.copyToClipboard",
+        "title": "Copy to Clipboard (PromptPack)"
+      },
+      {
+        "command": "promptpack.copySelectedTabs",
+        "title": "Copy Selected Tabs (PromptPack)"
+      },
+      {
+        "command": "promptpack.copyProjectStructure",
+        "title": "Copy Project Structure (PromptPack)"
+      },
+      {
+        "command": "promptpack.copySourceControlContents",
+        "title": "Copy Source Control File Contents (PromptPack)"
+      },
+      {
+        "command": "promptpack.copyChanges",
+        "title": "Copy Changes (PromptPack)"
+      },
+      {
+        "command": "promptpack.repeatLastCopy",
+        "title": "PromptPack: Repeat Last Copy"
+      },
+      {
+        "command": "promptpack.forceCopy",
+        "title": "PromptPack: Force Copy Without Exclusions…"
+      },
+      {
+        "command": "promptpack.toggleProjectTree",
+        "title": "PromptPack: Toggle Project Tree"
+      },
+      {
+        "command": "promptpack.toggleDotFiles",
+        "title": "PromptPack: Toggle Dot Files Inclusion"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "promptpack.copyToClipboard",
+          "when": "!explorerResourceIsRoot",
+          "group": "6_copypath@90"
+        },
+        {
+          "command": "promptpack.copyProjectStructure",
+          "when": "config.promptpack.showCopyProjectStructure",
+          "group": "6_copypath@91"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "promptpack.copyToClipboard",
+          "when": "resourceScheme != untitled",
+          "group": "9_cutcopypaste@90"
+        },
+        {
+          "command": "promptpack.copyProjectStructure",
+          "when": "resourceScheme != untitled && config.promptpack.showCopyProjectStructure",
+          "group": "9_cutcopypaste@91"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "promptpack.copySelectedTabs",
+          "when": "resourceScheme != untitled",
+          "group": "1_copy@90"
+        }
+      ],
+      "scm/resourceState/context": [
+        {
+          "command": "promptpack.copySourceControlContents",
+          "group": "9_promptpack@1"
+        },
+        {
+          "command": "promptpack.copyChanges",
+          "when": "scmProvider == git",
+          "group": "9_promptpack@2"
+        }
+      ],
+      "scm/resourceGroup/context": [
+        {
+          "command": "promptpack.copySourceControlContents",
+          "group": "9_promptpack@1"
+        },
+        {
+          "command": "promptpack.copyChanges",
+          "when": "scmProvider == git",
+          "group": "9_promptpack@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "promptpack.copySelectedTabs",
+          "when": "false"
+        },
+        {
+          "command": "promptpack.copySourceControlContents",
+          "when": "false"
+        },
+        {
+          "command": "promptpack.copyChanges",
+          "when": "false"
+        },
+        {
+          "command": "promptpack.repeatLastCopy",
+          "when": "promptpack.hasLastCopy"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "PromptPack",
+      "properties": {
+        "promptpack.outputFormat": {
+          "type": "string",
+          "enum": [
+            "markdown",
+            "xml",
+            "plaintext"
+          ],
+          "enumDescriptions": [
+            "Markdown with fenced code blocks.",
+            "XML tags around the tree and each file. Claude handles this format well.",
+            "Plain text with separator lines."
+          ],
+          "default": "markdown",
+          "markdownDescription": "Output format of every copy."
+        },
+        "promptpack.includeProjectTree": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Add a project tree above the file contents."
+        },
+        "promptpack.maxDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 5,
+          "markdownDescription": "Maximum depth of the project tree. Only the tree is limited; the contents of deeper files are still copied."
+        },
+        "promptpack.showCopyProjectStructure": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show **Copy Project Structure (PromptPack)** in the Explorer and editor context menus."
+        },
+        "promptpack.ignoreDotFiles": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Skip files and folders whose names start with a dot, such as `.env` and `.git`."
+        },
+        "promptpack.ignoreGitIgnore": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Skip paths matched by the `.gitignore` in the workspace root. Nested `.gitignore` files are not read."
+        },
+        "promptpack.exclude": {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Exact files or folders to skip (everything inside folders too), relative to the workspace folder."
+            },
+            "patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Patterns in .gitignore syntax."
+            }
+          },
+          "additionalProperties": false,
+          "default": {
+            "paths": [],
+            "patterns": [
+              "node_modules",
+              "*.log"
+            ]
+          },
+          "markdownDescription": "Paths and `.gitignore`-style patterns to skip. VS Code merges your object with the default, so `{}` keeps `node_modules` and `*.log` excluded. Set both lists to `[]` to turn every exclusion off."
+        },
+        "promptpack.excludeContentPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Patterns (`.gitignore` syntax) for files that stay in the tree but whose contents are replaced with a short note, for example `[\"**/*.svg\", \"assets/**\"]`."
+        },
+        "promptpack.maxFileSize": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1048576,
+          "markdownDescription": "Largest file, in bytes, whose contents are copied. Larger files appear only as a one-line note."
+        },
+        "promptpack.enableTokenCounting": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show the token count of every copy in the status bar. Counting runs offline."
+        },
+        "promptpack.llmModel": {
+          "type": "string",
+          "default": "claude-sonnet-5",
+          "markdownDescription": "Model you paste into, for example `claude-opus-5`, `gpt-5.5` or `gemini-3-pro`. The name selects the tokenizer; dated names such as `claude-opus-5-20260416` work."
+        },
+        "promptpack.maxTokens": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 100000,
+          "markdownDescription": "Token count above which PromptPack shows a warning. `0` turns the warning off."
+        },
+        "promptpack.enableTokenWarning": {
+          "type": "boolean",
+          "default": true,
+          "deprecationMessage": "Deprecated: set promptpack.maxTokens to 0 instead.",
+          "markdownDeprecationMessage": "**Deprecated**: set `#promptpack.maxTokens#` to `0` instead."
+        },
+        "promptpack.excludePaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "deprecationMessage": "Deprecated: moved into promptpack.exclude.paths automatically.",
+          "markdownDeprecationMessage": "**Deprecated**: moved into `#promptpack.exclude#` (`paths`) automatically."
+        },
+        "promptpack.excludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "node_modules",
+            "*.log"
+          ],
+          "deprecationMessage": "Deprecated: moved into promptpack.exclude.patterns automatically.",
+          "markdownDeprecationMessage": "**Deprecated**: moved into `#promptpack.exclude#` (`patterns`) automatically."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "node esbuild.js --production",
+    "compile": "npm run typecheck && node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "typecheck": "tsc -p . --noEmit",
+    "pretest": "tsc -p tsconfig.test.json",
+    "test": "node --test \"out/test/**/*.test.js\"",
+    "package": "vsce package --no-dependencies --allow-missing-repository"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "1.104.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0",
+    "gpt-tokenizer": "^3.4.0",
+    "ignore": "^7.0.0",
+    "typescript": "^5.9.0"
+  }
+}
