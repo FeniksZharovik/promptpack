@@ -94,5 +94,3 @@ npm run compile     # typecheck + bundle
 npm test            # unit tests for the core
 npm run package     # produces promptpack-<version>.vsix
 ```
-
-Press F5 to start an Extension Development Host. Before publishing, change `publisher` in `package.json`.
